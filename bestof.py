@@ -40,8 +40,16 @@ class FlaskAppWrapper(object):
 
 
     def run(self):
-        """Starts the Flask server. Once started cannot be stoped!"""
-        self.app.run("localhost", 5000)
+        """Starts the Flask server."""
+        global server
+        server = _ServerThread(self.app)
+        server.start()
+
+
+    def shutdown(self):
+        """Shuts down the Flask server."""
+        global server
+        server.shutdown()
 
 
     def add_endpoint(self, endpoint=None, endpoint_name=None, handler=None, response=None):
@@ -49,7 +57,7 @@ class FlaskAppWrapper(object):
         self.app.add_url_rule(
             endpoint,
             endpoint_name,
-            EndpointAction(handler, response)
+            _EndpointAction(handler, response)
         )
 
     __name = 'FlaskAuthenticationServer'
