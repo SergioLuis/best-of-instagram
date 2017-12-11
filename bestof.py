@@ -2,7 +2,9 @@
 into shaddy websites!
 """
 
+from threading import Thread
 from flask import Flask, Response, request
+from werkzeug.serving import make_server
 
 class Instagram(object):
     """Lightweight wrapper for the Instagram API."""
@@ -53,7 +55,27 @@ class FlaskAppWrapper(object):
     __name = 'FlaskAuthenticationServer'
 
 
-class EndpointAction(object):
+class _ServerThread(Thread):
+    """A way to run a Flask instance in another thread."""
+
+    def __init__(self, app):
+        Thread.__init__(self)
+        self.srv = make_server('localhost', 5000, app)
+        self.ctx = app.app_context()
+        self.ctx.push()
+
+
+    def run(self):
+        """Starts the server."""
+        self.srv.serve_forever()
+
+
+    def shutdown(self):
+        """Shuts down the server."""
+        self.srv.shutdown_signal()
+
+
+class _EndpointAction(object):
     """Represents an action to be executed when an endpoint is hit."""
 
     def __init__(self, action, response):
