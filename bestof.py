@@ -2,6 +2,10 @@
 into shaddy websites!
 """
 
+import json
+import webbrowser
+
+from os import path
 from threading import Thread
 from flask import Flask, Response, request
 from werkzeug.serving import make_server
@@ -10,17 +14,38 @@ class Instagram(object):
     """Lightweight wrapper for the Instagram API."""
 
     def authenticate(self):
-        """Asks the user to gran the app permissions, and grabs the access token.""" 
+        """Asks the user to gran the app permissions, and grabs the access token."""
+        if Instagram.__load_access_token() is not None:
+            return
+
         auth_server = FlaskAppWrapper()
         auth_server.add_endpoint(
             endpoint="/",
             handler=self.__save_access_token,
             response=Response("OK!", status=200, content_type="text/plain")
         )
+        auth_server.run()
+        webbrowser.open("https://instagram.com")
 
 
-    def __save_access_token(self, args):
-        print(args)
+    def _handle_instagram_redirect(self, args):
+        Instagram.__save_access_token(args['access_token'])
+
+
+    @staticmethod
+    def __save_access_token(access_token):
+        setting = { 'access_token' : access_token }
+        with open(Instagram.__auth) as config:
+            json.dump(setting, config)
+
+
+    @staticmethod
+    def __load_access_token():
+        if not path.isfile(Instagram.__auth):
+            return None
+
+        with open(Instagram.__auth) as config:
+            return json.load(config).get('access_token', None)
 
 
     __settings = 'instagram_settings.json'
@@ -94,3 +119,8 @@ class _EndpointAction(object):
     def __call__(self, *args):
         self.action(request.args)
         return self.response
+
+
+if __name__ == '__main__':
+    instagram = Instagram()
+    instagram.authenticate()
