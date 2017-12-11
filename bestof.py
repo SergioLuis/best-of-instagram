@@ -82,7 +82,7 @@ class FlaskAppWrapper(object):
         self.app.add_url_rule(
             endpoint,
             endpoint_name,
-            _EndpointAction(handler, response)
+            _EndpointAction(handler, response).execute
         )
 
     __name = 'FlaskAuthenticationServer'
@@ -115,8 +115,7 @@ class _EndpointAction(object):
         self.action = action
         self.response = response
 
-
-    def __call__(self, *args):
+    def execute(self, *args):
         self.action(request.args)
         return self.response
 
