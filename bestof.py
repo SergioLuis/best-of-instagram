@@ -1,4 +1,6 @@
-import requests
+"""A way to get your best Instagram images of the year without logging in
+into shaddy websites!
+"""
 
 from flask import Flask, Response, request
 
