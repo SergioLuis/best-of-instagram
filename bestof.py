@@ -1,14 +1,12 @@
-# Header de mierda con la cabecera
-
 import requests
 
-from flask import Flask, Response
+from flask import Flask, Response, request
 
 class Instagram(object):
     """Lightweight wrapper for the Instagram API."""
 
     def authenticate(self):
-        """Asks the user to gran the app permissions, and grabs the access token."""
+        """Asks the user to gran the app permissions, and grabs the access token.""" 
         auth_server = FlaskAppWrapper()
         auth_server.add_endpoint(
             endpoint="/",
@@ -62,5 +60,5 @@ class EndpointAction(object):
 
 
     def __call__(self, *args):
-        self.action(args)
+        self.action(request.args)
         return self.response
