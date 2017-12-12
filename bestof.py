@@ -3,7 +3,6 @@ into shaddy websites!
 """
 
 import json
-import sys
 import time
 import webbrowser
 
