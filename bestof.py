@@ -3,6 +3,7 @@ into shaddy websites!
 """
 
 import json
+import sys
 import webbrowser
 
 from os import path
@@ -18,6 +19,15 @@ class Instagram(object):
         if Instagram.__load_access_token() is not None:
             return
 
+        client_id = Instagram.__load_client_id()
+        if client_id is None:
+            raise Exception(
+                """You need to save the ClientID in {} as a JSON file as: """
+                """     '{{ "client_id" : "the_client_id" }}' """.format(
+                    Instagram.__get_file_path(Instagram.__settings)
+                )
+            )
+
         auth_server = FlaskAppWrapper()
         auth_server.add_endpoint(
             endpoint="/",
@@ -25,7 +35,7 @@ class Instagram(object):
             response=Response("OK!", status=200, content_type="text/plain")
         )
         auth_server.run()
-        webbrowser.open("https://instagram.com")
+        webbrowser.open(Instagram.__build_oauth_url(client_id))
 
 
     def _handle_instagram_redirect(self, args):
@@ -33,23 +43,50 @@ class Instagram(object):
 
 
     @staticmethod
+    def __build_oauth_url(client_id):
+        return Instagram.__auth_url.format(
+            client_id,
+            Instagram.__redirect_uri
+        )
+
+
+    @staticmethod
     def __save_access_token(access_token):
-        setting = { 'access_token' : access_token }
-        with open(Instagram.__auth) as config:
+        setting = {'access_token': access_token}
+        with open(Instagram.__get_file_path(Instagram.__auth)) as config:
             json.dump(setting, config)
 
 
     @staticmethod
     def __load_access_token():
-        if not path.isfile(Instagram.__auth):
+        config_file = Instagram.__get_file_path(Instagram.__auth)
+        if not path.isfile(config_file):
             return None
 
-        with open(Instagram.__auth) as config:
+        with open(config_file) as config:
             return json.load(config).get('access_token', None)
+
+
+    @staticmethod
+    def __load_client_id():
+        config_file = Instagram.__get_file_path(Instagram.__settings)
+        if not path.isfile(config_file):
+            return None
+
+        with open(config_file) as config:
+            return json.load(config).get('client_id', None)
+
+
+    @staticmethod
+    def __get_file_path(file_name):
+        return path.join(path.expanduser('~'), file_name)
 
 
     __settings = 'instagram_settings.json'
     __auth = 'instagram_auth.json'
+
+    __auth_url = 'https://api.instagram.com/oauth/authorize/?client_id={}&redirect_uri={}&response_type=token'
+    __redirect_uri = 'http://localhost:5000'
 
     __login_endpoint = "/"
 
@@ -115,7 +152,9 @@ class _EndpointAction(object):
         self.action = action
         self.response = response
 
+
     def execute(self, *args):
+        """Executes the action when a request comes in, and returns the Response."""
         self.action(request.args)
         return self.response
 
