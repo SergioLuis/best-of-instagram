@@ -4,6 +4,7 @@ into shaddy websites!
 
 import json
 import sys
+import time
 import webbrowser
 
 from os import path
@@ -31,15 +32,36 @@ class Instagram(object):
         auth_server = FlaskAppWrapper()
         auth_server.add_endpoint(
             endpoint="/",
-            handler=self.__save_access_token,
-            response=Response("OK!", status=200, content_type="text/plain")
+            response=Response(
+                self.__authorization_js,
+                status=200,
+                content_type="text/html")
+        )
+        auth_server.add_endpoint(
+            endpoint="/success",
+            handler=self._handle_instagram_redirect,
+            response=Response(
+                "OK! You can go back now!",
+                status=200,
+                content_type="text/html"
+            )
         )
         auth_server.run()
         webbrowser.open(Instagram.__build_oauth_url(client_id))
 
+        while not self._is_authorized():
+            time.sleep(1)
+
+        # FIXME: this throws an exception
+        # auth_server.shutdown()
+
 
     def _handle_instagram_redirect(self, args):
-        Instagram.__save_access_token(args['access_token'])
+        pass
+
+
+    def _is_authorized(self):
+        return path.isfile(Instagram.__get_file_path(Instagram.__auth))
 
 
     @staticmethod
@@ -53,7 +75,7 @@ class Instagram(object):
     @staticmethod
     def __save_access_token(access_token):
         setting = {'access_token': access_token}
-        with open(Instagram.__get_file_path(Instagram.__auth)) as config:
+        with open(Instagram.__get_file_path(Instagram.__auth), 'w') as config:
             json.dump(setting, config)
 
 
@@ -87,6 +109,9 @@ class Instagram(object):
 
     __auth_url = 'https://api.instagram.com/oauth/authorize/?client_id={}&redirect_uri={}&response_type=token'
     __redirect_uri = 'http://localhost:5000'
+
+    # TODO: some javascript that gets the token and makes another request with it
+    __authorization_js = ''
 
     __login_endpoint = "/"
 
