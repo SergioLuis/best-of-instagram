@@ -1,9 +1,10 @@
-"""A way to get your best Instagram images of the year without logging in
-into shaddy websites!
+"""A way to get your best Instagram images of the year without logging into
+shaddy websites!
 """
 
 import base64
 import json
+import logging
 import time
 import webbrowser
 import zlib
@@ -128,6 +129,8 @@ class FlaskAppWrapper(object):
     server = None
 
     def __init__(self):
+        flask_logger = logging.getLogger("werkzeug")
+        flask_logger.setLevel(logging.ERROR)
         self.app = Flask(FlaskAppWrapper.__name)
 
 
@@ -181,7 +184,7 @@ class _EndpointAction(object):
         self.response = response
 
 
-    def execute(self, *args):
+    def execute(self, *args): # pylint: disable=W0613
         """Executes the action when a request comes in, and returns the Response."""
         if self.action is not None:
             self.action(request.args)
