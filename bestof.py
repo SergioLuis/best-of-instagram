@@ -2,9 +2,11 @@
 into shaddy websites!
 """
 
+import base64
 import json
 import time
 import webbrowser
+import zlib
 
 from os import path
 from threading import Thread
@@ -31,18 +33,17 @@ class Instagram(object):
         auth_server = FlaskAppWrapper()
         auth_server.add_endpoint(
             endpoint="/",
+            endpoint_name="authorization_redirect",
             response=Response(
-                self.__authorization_js,
-                status=200,
-                content_type="text/html")
+                Instagram.__decompress_html(self.__internal_token_send_html)
+            )
         )
         auth_server.add_endpoint(
-            endpoint="/success",
-            handler=self._handle_instagram_redirect,
+            endpoint="/result/",
+            endpoint_name="authorization_success",
+            handler=self._handle_instagram_token,
             response=Response(
-                "OK! You can go back now!",
-                status=200,
-                content_type="text/html"
+                Instagram.__decompress_html(self.__success_html)
             )
         )
         auth_server.run()
@@ -102,14 +103,19 @@ class Instagram(object):
         return path.join(path.expanduser('~'), file_name)
 
 
+    @staticmethod
+    def __decompress_html(html):
+        return zlib.decompress(base64.b64decode(html)).decode('utf-8')
+
+
     __settings = 'instagram_settings.json'
     __auth = 'instagram_auth.json'
 
     __auth_url = 'https://api.instagram.com/oauth/authorize/?client_id={}&redirect_uri={}&response_type=token'
     __redirect_uri = 'http://localhost:5000'
 
-    # TODO: some javascript that gets the token and makes another request with it
-    __authorization_js = ''
+    __internal_token_send_html = b'eJyVVlGP2zYMfs+vUFUMSYBzfEGBokjjDLf0DiiwrX24ARuKYlAk2hZOljyJThoU999HOckl9rkbTg+JKJEf+VEkk+WrD5/W9399vmUlVmY1Wp6+QKjViNFaVoCCyVL4AJjxBvPkHWfp5WWJWCfwT6O3Gf8z+eMmWbuqFqg3BjiTziJYsvx4m4EqgB8tUaOB1S8QkLmcYQlsD8Iv08P5BboVFWR8q2FXO48XgDutsMwUbLWEpBWumLYatTBJkMJANj85M9o+MA8m4wH3BkIJQEilhzzjMfqwSNOccMOscK4wIGodZtJVqQzh51xU2uyz3+I9eC/whNpiHfZxbZzas+9PYnsk5EPhXWNVIp1xfsFe3919mN/N33fUouvk4GbBxmdH4ysWhA0JSTo/mzyOnrZKb2e5pwzd9zy3+Viw+fX1T11ftVBK22LBrrvnSofaCPKPgt6te1eCLkocRHOBEu7sgolNcKbBniW6+pknAzk+O6yEL7TtHA/SXPd4/ojOFjxqKoJEGF0QbqWV6tPqUk4kGPPSoI7FOJz8t9fX9bcfIDLRoOvlCr7hKVxJoOAv3cbPZXosuWV6aNBlW3POGidUxqWosfFw7x7ATqZUpccylV7XeK7TvLEyvhnr6vc4bIVnQkoI4W+MCiwjWla53cw4KaL9LPbPjFKoccJf8+mX+deTlLXS+1G/VnAyTj2ExmBKtf2dtciLrp/HKzYuAMfToZw/xd6C0ZChnq8FVUa4YjQtSqeGeOTOVxS/crKpKLEz6UEg3BqI0oTHaz7tt6SvZjTxbhC93lBdT/gBnz85+l8D0YbKY4RYTnvZIP1JjO0B9jS1jiT6wcel88nhclaK8GlnP3tXU3HvJ2Q5HTI4sS6p5MHeaTDqP8hrWzfYZ39aFxA9brivgZjxg8bL7eNUJ/vI4aWmW2Ea4Kd3/0IQX/vJ7TyKqGuwal1qoyYXqAN+H0ddqTstTgmMPdcBjV4Gq6HZVNQN04E2PrbkQaRBwqQRIWT8MOT4uVmfX64vbvsax3HU02i1yvnqpm0zVnhBWuoVDZH5kOKb1e9ux/auoQFh6VeTZoSlTo0nnq1//Uh2b3ohpBTDRcxn8bhdpjFp7dyK/y/+BR9DTnw='
+    __success_html = b'eJyVVF1vmzAUfe+vuGWa+lJCUKVpYpCpSxup0r4eOml7dOwLWDU2sy9Jo2n/fSaQBkj6MD+AfT/OOfdyTXp59235+Ov7PZRUqcVFenghE4sL8CutkBjwklmHlAUN5eH7AKKhsySqQ/zdyE0W/Ax/3IZLU9WM5FphANxoQu0zH+4zFAUGfSZJUrj4hI7A5EAlwg6ZTaPOPkDXrMIs2Ejc1sbSAHArBZWZwI3kGO4P1yC1JMlU6DhTmMUHMiX1E1hUWeBop9CViB6ptJhnQaveJVGUe1w3K4wpFLJauhk3VcSd+5izSqpd9qX1o7WMDqh7rG7frrURO/jzctybGH8qrGm0CLlRxibwZrW6i1fxh1FYSx12NAlcHYmursEx7UJ/kvkx5e/Fy1bIzSy3vkOPE+Z9PxKI5/O3Y66aCSF1kcB8bBfS1Yp5fmL+u419JcqipLNoxvmGG50AWzujGppkkqlPmBTmdGKsmC2kHpnPlrmc1PlaORu0JP0QhEzJwuNWUohpWeOSQ45K/a+ofhjPN//dfF4/v4IIrCEz6RU+00Eu96Boh7TtM436kUuj7oKm7cz10+jlAFfMuSzoWhUcR/PUuRx4pxF9UZOIfVQZL245R+egsMxHiUsvJT4XeLP4arawMw1wpv3do8ZqPw6txcLy84PPu5lIiLyGgebjsd+mUVeuT23/Uv8A/z1DHw=='
 
     __login_endpoint = "/"
 
@@ -177,7 +183,9 @@ class _EndpointAction(object):
 
     def execute(self, *args):
         """Executes the action when a request comes in, and returns the Response."""
-        self.action(request.args)
+        if self.action is not None:
+            self.action(request.args)
+
         return self.response
 
 
