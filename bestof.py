@@ -55,8 +55,8 @@ class Instagram(object):
         auth_server.shutdown()
 
 
-    def _handle_instagram_redirect(self, args):
-        pass
+    def _handle_instagram_token(self, args):
+        Instagram.__save_access_token(args['token'])
 
 
     def _is_authorized(self):
