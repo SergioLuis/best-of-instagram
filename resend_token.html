@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Best of the year</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
+    <style>
+        body {
+            background-color: #FFD1F1;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        div.frameT {
+            width: 100%;
+            padding: 0;
+            display: table;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            margin: 0;
+        }
+
+        div.frameTC {
+            padding: 0;
+            vertical-align: middle;
+            display: table-cell;
+            margin: 0;
+        }
+
+        div.content {
+            width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+    </style>
+</head>
+<body onload="captureToken()">
+
+    <script>
+        function captureToken() {
+            var access_token = window.location.href.split("#")[1].split("=")[1];
+
+            post('/result/', { token: access_token }, 'get')
+        }
+
+        function post(path, params, method) {
+            var form = document.createElement("form");
+            form.setAttribute("method", method);
+            form.setAttribute("action", path);
+
+            for(var key in params) {
+                if(params.hasOwnProperty(key)) {
+                    var hiddenField = document.createElement("input");
+                    hiddenField.setAttribute("type", "hidden");
+                    hiddenField.setAttribute("name", key);
+                    hiddenField.setAttribute("value", params[key]);
+
+                    form.appendChild(hiddenField);
+                }
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+
+    <div class="frameT">
+        <div class="frameTC">
+            <div class="content">
+                <h1>Access granted!</h1>
+                <h3>Now you can return to your CLI</h3>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
