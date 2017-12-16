@@ -51,8 +51,7 @@ class Instagram(object):
         while not self._is_authorized():
             time.sleep(1)
 
-        # FIXME: this throws an exception
-        # auth_server.shutdown()
+        auth_server.shutdown()
 
 
     def _handle_instagram_redirect(self, args):
@@ -120,6 +119,7 @@ class FlaskAppWrapper(object):
 
     app = None
     instagram = None
+    server = None
 
     def __init__(self):
         self.app = Flask(FlaskAppWrapper.__name)
@@ -127,15 +127,13 @@ class FlaskAppWrapper(object):
 
     def run(self):
         """Starts the Flask server."""
-        global server
-        server = _ServerThread(self.app)
-        server.start()
+        self.server = _ServerThread(self.app)
+        self.server.start()
 
 
     def shutdown(self):
         """Shuts down the Flask server."""
-        global server
-        server.shutdown()
+        self.server.shutdown()
 
 
     def add_endpoint(self, endpoint=None, endpoint_name=None, handler=None, response=None):
@@ -166,7 +164,7 @@ class _ServerThread(Thread):
 
     def shutdown(self):
         """Shuts down the server."""
-        self.srv.shutdown_signal()
+        self.srv.shutdown()
 
 
 class _EndpointAction(object):
