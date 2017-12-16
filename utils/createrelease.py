@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Creates a release of this module."""
 
 import base64
