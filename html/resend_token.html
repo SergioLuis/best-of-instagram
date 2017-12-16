@@ -42,7 +42,6 @@
     <script>
         function captureToken() {
             var access_token = window.location.href.split("#")[1].split("=")[1];
-
             post('/result/', { token: access_token }, 'get')
         }
 
@@ -70,8 +69,8 @@
     <div class="frameT">
         <div class="frameTC">
             <div class="content">
-                <h1>Access granted!</h1>
-                <h3>Now you can return to your CLI</h3>
+                <h1>Resending the token to the application</h1>
+                <h3>Please wait...</h3>
             </div>
         </div>
     </div>
