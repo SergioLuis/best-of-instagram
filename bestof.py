@@ -4,6 +4,7 @@ shaddy websites!
 
 import base64
 import ctypes
+import datetime
 import json
 import logging
 import os
@@ -187,7 +188,19 @@ class _Api(object):
         if not response.ok or response.status_code is not 200:
             return None
 
-        return json.loads(response.content)
+        return list(
+            map(_Api._convert_created_time, json.loads(response.content)['data'])
+        )
+
+
+    @staticmethod
+    def _convert_created_time(dictionary):
+        dictionary['created_time'] = (
+            datetime.datetime.utcfromtimestamp(
+                int(dictionary['created_time'])
+            )
+        )
+        return dictionary
 
 
 class _Utils(object):
