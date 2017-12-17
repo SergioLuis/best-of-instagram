@@ -10,6 +10,7 @@ import os
 import time
 import webbrowser
 import zlib
+import requests
 
 from threading import Thread
 from flask import Flask, Response, request
@@ -137,6 +138,52 @@ class Instagram(object):
     @property
     def _client_id(self):
         return _Utils.decompress_text(self._b64_client_id)
+
+
+class _Api(object):
+    """Wrapper class to handle Instagram API endpoinst."""
+
+    _base_url = 'https://api.instagram.com/v1'
+
+    _users = '/users/{}/'
+    _users_media_recent = '/users/{}/media/recent/'
+
+    def __init__(self, access_token):
+        self.access_token = access_token
+
+
+    def get_user(self, user_id='self'):
+        """Returns a dictionary with the response to the /users/{user_id}/
+        endpoint if the request succeeded, None otherwise.
+        """
+        url_params = {'access_token': self.access_token}
+        url = self._base_url + self._users.format(user_id)
+
+        response = requests.get(url, params=url_params)
+        if not response.ok or response.status_code is not 200:
+            return None
+
+        return json.loads(response.content)
+
+
+    def get_user_media_recent(self, user_id='self', max_id=None, min_id=None, count=None):
+        """Returns a dictionary with the response to the
+        /users/{user-id}/media/recent/ endpoint if the request succeeded, None
+        otherwise.
+        """
+        url = self._base_url + self._users_media_recent.format(user_id)
+        url_params = {
+            'access_token': self.access_token,
+            'max_id': max_id,
+            'min_id': min_id,
+            'count': count
+        }
+
+        response = requests.get(url, params=url_params)
+        if not response.ok or response.status_code is not 200:
+            return None
+
+        return json.loads(response.content)
 
 
 class _Utils(object):
