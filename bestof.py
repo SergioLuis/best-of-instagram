@@ -19,6 +19,8 @@ from werkzeug.serving import make_server
 class Instagram(object):
     """Lightweight wrapper for the Instagram API."""
 
+    _api = None
+
     # Compressed just to avoid bots scanning for such information.
     _b64_client_id = b'eJwzNbMwT0lOTbYwskwyMTAwtkgyM000MUkyT0xKtkyyNAIAjuEIyQ=='
     _auth = '.instagram_access_token'
@@ -70,6 +72,7 @@ class Instagram(object):
         the access token to the user's home directory.
         """
         if self._access_token is not None:
+            self._api = _Api(self._access_token)
             return
 
         auth_server = _FlaskAppWrapper()
@@ -99,6 +102,7 @@ class Instagram(object):
 
     def _handle_instagram_token(self, args):
         self._access_token = args['token']
+        self._api = _Api(args['token'])
 
 
     def _is_authorized(self):
